@@ -1,0 +1,239 @@
+---
+import { 
+    fetchBilibiliUserInfo, 
+    fetchBilibiliUserAnimeList, 
+    fetchBilibiliPopularAnime,
+    fetchBilibiliChineseAnime,
+    fetchBilibiliMixedAnimeData,
+    fetchBilibiliUserAllFollowList
+} from "../utils/bilibili-api";
+import { siteConfig } from "../config";
+
+// 获取配置信息
+const userId = siteConfig.anime?.bilibili?.userId || "440430791";
+const useUserFollow = siteConfig.anime?.bilibili?.useUserFollow ?? true;
+
+// 测试各种API调用
+console.log("=== B站API调试开始 ===");
+console.log("用户ID:", userId);
+console.log("使用用户追番:", useUserFollow);
+
+// 1. 测试用户信息API
+console.log("\n1. 测试用户信息API...");
+const userInfo = await fetchBilibiliUserInfo(userId);
+console.log("用户信息结果:", userInfo);
+
+// 2. 测试用户追番API
+console.log("\n2. 测试用户追番API...");
+const userAnimeList = await fetchBilibiliUserAnimeList(userId);
+console.log("用户追番结果:", userAnimeList.length, "个");
+
+// 3. 测试热门番剧API
+console.log("\n3. 测试热门番剧API...");
+const popularAnime = await fetchBilibiliPopularAnime();
+console.log("热门番剧结果:", popularAnime.length, "个");
+
+// 4. 测试国创API
+console.log("\n4. 测试国创API...");
+const chineseAnime = await fetchBilibiliChineseAnime();
+console.log("国创结果:", chineseAnime.length, "个");
+
+// 5. 测试混合模式API
+console.log("\n5. 测试混合模式API...");
+const mixedAnimeList = await fetchBilibiliMixedAnimeData(userId);
+console.log("混合模式结果:", mixedAnimeList.length, "个");
+
+// 6. 测试原始追番API
+console.log("\n6. 测试原始追番API...");
+const allFollowData = await fetchBilibiliUserAllFollowList(userId);
+console.log("原始追番API结果:", allFollowData);
+
+console.log("=== B站API调试结束 ===");
+---
+
+<html>
+<head>
+    <title>B站API调试页面</title>
+    <meta charset="utf-8">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .debug-section { 
+            background: white; 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin: 20px 0; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-success { color: #28a745; font-weight: bold; }
+        .status-error { color: #dc3545; font-weight: bold; }
+        .status-warning { color: #ffc107; font-weight: bold; }
+        .code-block { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 4px; 
+            overflow-x: auto; 
+            font-family: monospace; 
+            font-size: 12px;
+            border-left: 4px solid #007bff;
+        }
+        .anime-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .anime-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .anime-cover {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 B站API调试页面</h1>
+    
+    <div class="debug-section">
+        <h2>📋 配置信息</h2>
+        <p><strong>用户ID:</strong> {userId}</p>
+        <p><strong>使用用户追番:</strong> {useUserFollow ? '是' : '否'}</p>
+        <p><strong>模式:</strong> {siteConfig.anime?.mode || '未设置'}</p>
+    </div>
+    
+    <div class="debug-section">
+        <h2>👤 用户信息测试</h2>
+        {userInfo ? (
+            <div>
+                <p class="status-success">✅ 用户信息获取成功</p>
+                <p><strong>用户名:</strong> {userInfo.data?.name || '未知'}</p>
+                <p><strong>用户ID:</strong> {userInfo.data?.mid || '未知'}</p>
+                <p><strong>签名:</strong> {userInfo.data?.sign || '无'}</p>
+                <div class="code-block">
+                    {JSON.stringify(userInfo, null, 2)}
+                </div>
+            </div>
+        ) : (
+            <p class="status-error">❌ 用户信息获取失败</p>
+        )}
+    </div>
+    
+    <div class="debug-section">
+        <h2>📺 用户追番测试</h2>
+        {userAnimeList.length > 0 ? (
+            <div>
+                <p class="status-success">✅ 用户追番数据获取成功 ({userAnimeList.length}个)</p>
+                <div class="anime-preview">
+                    {userAnimeList.slice(0, 6).map(anime => (
+                        <div class="anime-card">
+                            <img src={anime.cover} alt={anime.title} class="anime-cover" />
+                            <h4 style="margin: 8px 0 4px 0; font-size: 14px;">{anime.title}</h4>
+                            <p style="margin: 0; font-size: 12px; color: #666;">{anime.status} | {anime.year}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        ) : (
+            <div>
+                <p class="status-warning">⚠️ 用户追番数据为空</p>
+                <p>可能的原因：</p>
+                <ul>
+                    <li>用户未登录B站</li>
+                    <li>用户没有追番记录</li>
+                    <li>API接口需要用户授权</li>
+                    <li>接口已变更或限制访问</li>
+                </ul>
+            </div>
+        )}
+    </div>
+    
+    <div class="debug-section">
+        <h2>🔥 热门番剧测试</h2>
+        {popularAnime.length > 0 ? (
+            <div>
+                <p class="status-success">✅ 热门番剧数据获取成功 ({popularAnime.length}个)</p>
+                <div class="anime-preview">
+                    {popularAnime.slice(0, 6).map(anime => (
+                        <div class="anime-card">
+                            <img src={anime.cover} alt={anime.title} class="anime-cover" />
+                            <h4 style="margin: 8px 0 4px 0; font-size: 14px;">{anime.title}</h4>
+                            <p style="margin: 0; font-size: 12px; color: #666;">{anime.year} | {anime.studio}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        ) : (
+            <p class="status-error">❌ 热门番剧数据获取失败</p>
+        )}
+    </div>
+    
+    <div class="debug-section">
+        <h2>🇨🇳 国创测试</h2>
+        {chineseAnime.length > 0 ? (
+            <div>
+                <p class="status-success">✅ 国创数据获取成功 ({chineseAnime.length}个)</p>
+                <div class="anime-preview">
+                    {chineseAnime.slice(0, 6).map(anime => (
+                        <div class="anime-card">
+                            <img src={anime.cover} alt={anime.title} class="anime-cover" />
+                            <h4 style="margin: 8px 0 4px 0; font-size: 14px;">{anime.title}</h4>
+                            <p style="margin: 0; font-size: 12px; color: #666;">{anime.year} | {anime.studio}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        ) : (
+            <p class="status-error">❌ 国创数据获取失败</p>
+        )}
+    </div>
+    
+    <div class="debug-section">
+        <h2>🔄 混合模式测试</h2>
+        {mixedAnimeList.length > 0 ? (
+            <div>
+                <p class="status-success">✅ 混合模式数据获取成功 ({mixedAnimeList.length}个)</p>
+                <p>数据来源: {userAnimeList.length > 0 ? '用户追番数据' : '热门数据'}</p>
+            </div>
+        ) : (
+            <p class="status-error">❌ 混合模式数据获取失败</p>
+        )}
+    </div>
+    
+    <div class="debug-section">
+        <h2>🔍 原始API响应</h2>
+        <h3>用户追番API原始响应:</h3>
+        <div class="code-block">
+            {JSON.stringify(allFollowData, null, 2)}
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>💡 解决方案建议</h2>
+        <div>
+            <h3>如果用户追番数据无法获取：</h3>
+            <ol>
+                <li><strong>检查用户ID是否正确</strong> - 确保使用的是正确的B站用户ID</li>
+                <li><strong>用户需要登录B站</strong> - 追番数据需要用户登录后才能获取</li>
+                <li><strong>API接口限制</strong> - B站可能限制了追番数据的访问</li>
+                <li><strong>使用热门数据</strong> - 设置 <code>useUserFollow: false</code> 直接使用热门数据</li>
+            </ol>
+            
+            <h3>如果所有API都失败：</h3>
+            <ol>
+                <li><strong>检查网络连接</strong> - 确保能正常访问B站</li>
+                <li><strong>检查API接口</strong> - B站可能更新了API接口</li>
+                <li><strong>使用本地数据</strong> - 设置 <code>mode: "local"</code> 使用本地配置</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

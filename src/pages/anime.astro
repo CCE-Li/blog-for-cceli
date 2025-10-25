@@ -5,10 +5,10 @@ import localAnimeList from "../data/anime";
 import I18nKey from "../i18n/i18nKey";
 import { i18n } from "../i18n/translation";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
-import { siteConfig } from "../config";
+import { fetchBilibiliPopularAnime, fetchBilibiliChineseAnime, fetchBilibiliUserAnimeList } from "../utils/bilibili-api";
 
 // Bangumi API配置
-const BANGUMI_USER_ID = siteConfig.bangumi?.userId || "your-user-id"; // 用户ID
+const BANGUMI_USER_ID = siteConfig.bangumi?.userId || "440430791"; // 用户ID
 const BANGUMI_API_BASE = "https://api.bgm.tv";
 
 // 获取番剧数据模式(不需要更改，请在主配置src/config.ts中修改)
@@ -129,10 +129,41 @@ async function processBangumiData(data: any, status: string) {
 }
 
 // 根据模式获取番剧列表
-let animeList = [];
+let animeList: any[] = [];
 if (ANIME_MODE === "local") {
 	// 使用本地配置
 	animeList = localAnimeList;
+} else if (ANIME_MODE === "bilibili") {
+	// 使用B站API
+	try {
+		const useUserFollow = siteConfig.anime?.bilibili?.useUserFollow ?? true;
+		const userId = siteConfig.anime?.bilibili?.userId || "440430791";
+		
+		if (useUserFollow) {
+			// 使用混合模式：优先用户追番数据，失败时使用热门数据
+			animeList = await fetchBilibiliUserAnimeList(userId);
+		} else {
+			// 直接使用热门数据
+			const [popularAnime, chineseAnime] = await Promise.all([
+				fetchBilibiliPopularAnime(),
+				fetchBilibiliChineseAnime()
+			]);
+			
+			// 合并番剧和国创数据
+			animeList = [...popularAnime, ...chineseAnime];
+			console.log("使用B站热门数据，数量:", animeList.length);
+		}
+		
+		// 如果B站API完全失败，回退到本地数据
+		if (animeList.length === 0) {
+			console.warn("B站API数据获取失败，使用本地数据");
+			animeList = localAnimeList;
+		}
+	} catch (error) {
+		console.error("B站API获取失败:", error);
+		// 回退到本地数据
+		animeList = localAnimeList;
+	}
 } else {
 	// 使用Bangumi API（默认模式）
 	// 获取与处理在看列表（type=3）看过列表（type=2）
@@ -255,7 +286,7 @@ const stats = {
           {i18n(I18nKey.animeList)}
         </h2>
         
-        {ANIME_MODE !== 'local' && BANGUMI_USER_ID === 'your-user-id' ? (
+        {ANIME_MODE !== 'local' && ANIME_MODE !== 'bilibili' && BANGUMI_USER_ID === 'your-user-id' ? (
           <div class="text-center py-12">
             <div class="text-5xl mb-4">😢</div>
             <h3 class="text-xl font-medium text-black/80 dark:text-white/80 mb-2">

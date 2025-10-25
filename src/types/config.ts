@@ -41,7 +41,12 @@ export type SiteConfig = {
 
 	// 添加番剧页面配置
 	anime?: {
-		mode?: "bangumi" | "local"; // 番剧页面模式
+		mode?: "bangumi" | "local" | "bilibili"; // 番剧页面模式
+		bilibili?: {
+			userId?: string; // B站用户ID
+			apiKey?: string; // B站API密钥
+			useUserFollow?: boolean; // 是否使用用户追番数据
+		};
 	};
 
 	banner: {
