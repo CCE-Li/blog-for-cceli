@@ -26,8 +26,8 @@
 [**📝 用户文档**](https://docs.mizuki.mysqil.com/)
 
 🌏 README 语言
-[**English**](./README.md) /
-[**中文**](./README.zh.md) /
+[**English**](./README.en.md) /
+[**中文**](./README.md) /
 [**日本語**](./docs/README.ja.md) /
 [**中文繁体**](./docs/README.tw.md) /
 
